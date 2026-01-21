@@ -1,6 +1,6 @@
-# config.py
 import pygame
 import os
+import json
 
 # Inicializa o pygame
 pygame.init()
@@ -27,6 +27,7 @@ IMAGES_DIR = os.path.join(ASSET_DIR, "Imagens_usadas")
 
 # Ficheiro onde o highscore será guardado
 HIGHSCORE_FILE = "highscore.json"
+PROGRESS_FILE = "progress.json"  # NOVO: ficheiro de progresso
 
 # Permite forçar uma posição do chão manualmente (None = detecção automática)
 MANUAL_GROUND_Y = 780
@@ -67,3 +68,29 @@ HUD_FONT = pygame.font.SysFont("Arial", 30)
 # Variáveis globais que serão atualizadas
 unlocked_levels = 1
 GROUND_Y = int(HEIGHT * 0.8)
+
+def load_unlocked_levels():
+    """Carrega os níveis desbloqueados do ficheiro."""
+    global unlocked_levels
+    try:
+        with open(PROGRESS_FILE, "r") as f:
+            data = json.load(f)
+            unlocked_levels = data.get("unlocked_levels", 1)
+            print(f"Níveis desbloqueados carregados: {unlocked_levels}")
+    except:
+        unlocked_levels = 1
+        save_unlocked_levels()
+
+def save_unlocked_levels():
+    """Salva os níveis desbloqueados no ficheiro."""
+    global unlocked_levels
+    try:
+        with open(PROGRESS_FILE, "w") as f:
+            json.dump({"unlocked_levels": unlocked_levels}, f)
+        print(f"Níveis desbloqueados salvos: {unlocked_levels}")
+    except Exception as e:
+        print("Erro ao salvar progresso:", e)
+
+# Carrega os níveis desbloqueados ao iniciar
+load_unlocked_levels()
+
