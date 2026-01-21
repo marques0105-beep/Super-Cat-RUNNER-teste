@@ -1,4 +1,3 @@
-# project_2.py
 import pygame
 import sys
 import random
@@ -339,3 +338,4 @@ if __name__ == "__main__":
     # Importa e inicia o menu
     from interfaces import menu
     menu(screen)
+
