@@ -1,14 +1,11 @@
-# ui.py
+# interfaces.py
 import pygame
 import sys
 from configuracoes import *
 from funcionalidades import draw_button, load_image, save_highscore, load_highscore
-from entidades import Gato
 
 def death_screen(screen, score, highscore):
-    """
-    Tela mostrada quando o jogador morre.
-    """
+    """Tela mostrada quando o jogador morre."""
     clock = pygame.time.Clock()
     start = pygame.time.get_ticks()
     auto_return_ms = 1800
@@ -48,9 +45,7 @@ def death_screen(screen, score, highscore):
             return
 
 def level_complete_screen(screen, level, score, highscore, has_next_level):
-    """
-    Tela mostrada quando um nível é concluído.
-    """
+    """Tela mostrada quando um nível é concluído."""
     clock = pygame.time.Clock()
     
     while True:
@@ -85,9 +80,7 @@ def level_complete_screen(screen, level, score, highscore, has_next_level):
         clock.tick(FPS)
 
 def victory_screen(screen, score, highscore):
-    """
-    Tela mostrada quando o jogador derrota o boss final.
-    """
+    """Tela mostrada quando o jogador derrota o boss final."""
     clock = pygame.time.Clock()
     
     while True:
@@ -119,9 +112,7 @@ def victory_screen(screen, score, highscore):
         clock.tick(FPS)
 
 def creditos(screen):
-    """
-    Tela de créditos e comandos.
-    """
+    """Tela de créditos e comandos."""
     clock = pygame.time.Clock()
     
     while True:
@@ -170,9 +161,7 @@ def creditos(screen):
         clock.tick(FPS)
 
 def draw_menu_background(surface):
-    """
-    Desenha um gradiente simples como fundo do menu.
-    """
+    """Desenha um gradiente simples como fundo do menu."""
     for i in range(HEIGHT):
         t = i / HEIGHT
         r = int(255 * (1 - t) + 80 * t)
@@ -181,9 +170,7 @@ def draw_menu_background(surface):
         pygame.draw.line(surface, (r, g, b), (0, i), (WIDTH, i))
 
 def level_select_menu(screen):
-    """
-    Tela para selecionar nível.
-    """
+    """Tela para selecionar nível."""
     from configuracoes import unlocked_levels
     
     clock = pygame.time.Clock()
@@ -226,6 +213,7 @@ def level_select_menu(screen):
                     chosen = buttons[selected_idx]
                     lvl = chosen["level"]
                     if lvl <= unlocked_levels:
+                        # Importa aqui para evitar importação circular
                         from project_2 import main_game
                         main_game(screen, start_level=lvl)
                         return
@@ -262,9 +250,7 @@ def level_select_menu(screen):
         clock.tick(FPS)
 
 def menu(screen):
-    """
-    Menu principal do jogo.
-    """
+    """Menu principal do jogo."""
     clock = pygame.time.Clock()
     selected_idx = 0
 
