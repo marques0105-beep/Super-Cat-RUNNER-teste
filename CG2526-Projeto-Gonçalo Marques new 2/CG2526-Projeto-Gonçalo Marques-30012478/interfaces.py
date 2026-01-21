@@ -1,4 +1,3 @@
-# interfaces.py
 import pygame
 import sys
 from configuracoes import *
@@ -324,3 +323,4 @@ def menu(screen):
 
         pygame.display.update()
         clock.tick(FPS)
+
