@@ -1,9 +1,8 @@
-# game_objects.py
 import pygame
 import random
 import math
 from configuracoes import *
-from interfaces import load_image
+from funcionalidades import load_image
 
 class Gato:
     def __init__(self):
@@ -100,6 +99,8 @@ class BossProjetil:
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
+# CORREÇÃO NO entidades.py
+
 class Tronco:
     def __init__(self):
         width = random.randint(CACTUS_MIN_WIDTH, CACTUS_MAX_WIDTH)
@@ -128,7 +129,9 @@ class Tronco:
         
         self.surf = surf
         self.rect = self.surf.get_rect()
-        self.rect.topleft = (WIDTH + 50, GROUND_Y - height)
+        # CORREÇÃO: Alinha corretamente com o chão
+        self.rect.bottom = GROUND_Y  # Mudei de topleft para bottom
+        self.rect.left = WIDTH + 50
 
     def update(self, speed):
         self.rect.x -= speed
@@ -139,11 +142,15 @@ class Tronco:
 class Bird:
     def __init__(self):
         self.image = load_image("passaro.png", (150, 100), flip_x=True)
-        base_height = GROUND_Y - 140
-        alt1 = base_height
-        alt2 = base_height - 60
-        height = random.choice([alt1, alt2])
         self.rect = self.image.get_rect()
+        
+        # CORREÇÃO: Pássaros mais altos
+        base_height = GROUND_Y - 200  # Aumentei de 140 para 200
+        alt1 = base_height
+        alt2 = base_height - 80  # Aumentei de 60 para 80
+        alt3 = base_height - 160  # Nova altura mais alta
+        height = random.choice([alt1, alt2, alt3])
+        
         self.rect.topleft = (WIDTH + 50, height)
         self.wave_offset = random.uniform(0, math.pi * 2)
 
