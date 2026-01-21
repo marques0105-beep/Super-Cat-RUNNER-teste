@@ -1,17 +1,19 @@
-# main.py
+# project_2.py
 import pygame
 import sys
 import random
 import math
 from configuracoes import *
-from funcionalidades import *
-from entidades import *
-from interfaces import *
+from funcionalidades import (
+    load_image, detect_ground_y_from_bg, create_ground_surface,
+    load_highscore, save_highscore, draw_button, draw_progress_map, draw_boss_hp
+)
+from entidades import (
+    Gato, Projetil, BossProjetil, Tronco, Bird, PowerUp, Boss
+)
 
 def main_game(screen, start_level=1):
-    """
-    Função principal que executa a lógica do jogo para um nível.
-    """
+    """Função principal que executa a lógica do jogo para um nível."""
     global unlocked_levels
     global GROUND_Y
 
@@ -54,12 +56,11 @@ def main_game(screen, start_level=1):
     paused = False
 
     highscore = load_highscore()
-    font = HUD_FONT
 
     bg_x = 0
     bg_speed = 4
 
-    # Temporizadores de spawn/intervalos
+    # Temporizadores
     obstacle_spawn_interval = max(26, 64 - (level - 1) * 6)
     obstacle_spawn_timer = obstacle_spawn_interval
     max_obstacles_base = 5
@@ -90,15 +91,12 @@ def main_game(screen, start_level=1):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                # Tecla X: atirar (se tiver power-up)
                 if event.key == pygame.K_x and gato.can_shoot and not paused:
                     gato.shoot()
                     bullets.append(Projetil(gato.rect.right, gato.rect.centery))
-                # Tecla P: pausa
                 if event.key == pygame.K_p:
                     paused = not paused
 
-            # Clique no botão "Voltar ao Menu" quando em pausa
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and paused:
                 btn_w, btn_h = 260, 70
                 btn_x = WIDTH // 2 - btn_w // 2
@@ -125,29 +123,32 @@ def main_game(screen, start_level=1):
             pygame.display.update()
             continue
 
-        # ========== ATUALIZAÇÕES DO JOGADOR ==========
+        # ========== ATUALIZAÇÕES ==========
         gato.update(user_input)
 
         # Verifica se completou o nível
         if not math.isinf(level_distance) and score >= level_distance:
             if level + 1 > unlocked_levels:
                 unlocked_levels = level + 1
+                from configuracoes import save_unlocked_levels
+                save_unlocked_levels()  # SALVA O PROGRESSO
             save_highscore(max(score, highscore))
-
+            
             has_next_level = (level < 5)
+            
+            from interfaces import level_complete_screen
             escolha = level_complete_screen(screen, level, score, max(score, highscore), has_next_level)
-
+            
             if escolha == "next" and has_next_level:
                 main_game(screen, start_level=level + 1)
                 return
             else:
                 return
 
-        # ========== LÓGICA DO BOSS (SE ATIVO) ==========
+        # ========== LÓGICA DO BOSS ==========
         if boss_active and boss:
             boss.update(gato.rect)
 
-            # Decide se o boss deve disparar agora
             if boss.should_shoot_now():
                 on_ground = (boss.rect.bottom >= GROUND_Y - 2)
                 offset_y = random.randint(-34, 34)
@@ -163,26 +164,27 @@ def main_game(screen, start_level=1):
                 spawn_x = boss.rect.left - 20
                 boss_bullets.append(BossProjetil(spawn_x, bullet_y, vx=vx, vy=vy))
 
-            # Se o boss ficou sem HP: vitória
             if boss.hp <= 0:
                 unlocked_levels = max(unlocked_levels, 5)
+                from configuracoes import save_unlocked_levels
+                save_unlocked_levels()  # SALVA QUE DESBLOQUEOU O BOSS
                 pygame.time.delay(400)
                 save_highscore(max(score, highscore))
+                from interfaces import victory_screen
                 victory_screen(screen, score, max(score, highscore))
                 return
 
-            # Colisão direta do jogador com o boss = morte
             if gato.rect.colliderect(boss.get_collision_rect()):
                 pygame.time.delay(300)
                 save_highscore(max(score, highscore))
+                from interfaces import death_screen
                 death_screen(screen, score, max(score, highscore))
                 return
 
-        # ========== ATUALIZAÇÃO E COLISÕES DE PROJÉTEIS ==========
+        # ========== PROJÉTEIS ==========
         for bullet in bullets[:]:
             bullet.update()
 
-            # Colisão entre projétil do jogador e do boss
             hit_bullet = False
             for b_b in boss_bullets[:]:
                 if bullet.rect.colliderect(b_b.rect):
@@ -195,14 +197,12 @@ def main_game(screen, start_level=1):
             if hit_bullet:
                 continue
 
-            # Colisão com boss
             if boss_active and boss and bullet.rect.colliderect(boss.get_collision_rect()):
                 boss.take_hit(from_state=boss.state)
                 if bullet in bullets:
                     bullets.remove(bullet)
                 continue
 
-            # Colisão com obstáculos
             hit = False
             for obstacle in obstacles[:]:
                 if bullet.rect.colliderect(obstacle.rect):
@@ -215,23 +215,22 @@ def main_game(screen, start_level=1):
             if hit:
                 continue
 
-            # Remove projéteis que saíram da tela
             if bullet.rect.x > WIDTH + 200 and bullet in bullets:
                 bullets.remove(bullet)
 
-        # ========== ATUALIZAÇÃO DE PROJÉTEIS DO BOSS ==========
         for b_bullet in boss_bullets[:]:
             b_bullet.update()
             if b_bullet.rect.colliderect(gato.rect):
                 pygame.time.delay(200)
                 save_highscore(max(score, highscore))
+                from interfaces import death_screen
                 death_screen(screen, score, max(score, highscore))
                 return
             if b_bullet.rect.right < -50 or b_bullet.rect.top > HEIGHT + 200 or b_bullet.rect.bottom < -200:
                 if b_bullet in boss_bullets:
                     boss_bullets.remove(b_bullet)
 
-        # ========== SPAWN E MOVIMENTO DE OBSTÁCULOS ==========
+        # ========== OBSTÁCULOS ==========
         if not boss_active:
             obstacle_spawn_timer -= 1
             if obstacle_spawn_timer <= 0:
@@ -252,18 +251,18 @@ def main_game(screen, start_level=1):
                 obstacle_spawn_interval = max(18, obstacle_spawn_interval - (score // 2000))
                 obstacle_spawn_timer = obstacle_spawn_interval
 
-            # Atualiza obstáculos
             for obstacle in obstacles[:]:
                 obstacle.update(speed)
                 if gato.rect.colliderect(obstacle.rect):
                     pygame.time.delay(300)
                     save_highscore(max(score, highscore))
+                    from interfaces import death_screen
                     death_screen(screen, score, max(score, highscore))
                     return
                 if obstacle.rect.x < -200 and obstacle in obstacles:
                     obstacles.remove(obstacle)
 
-        # ========== SPAWN E ATUALIZAÇÃO DE POWERUPS ==========
+        # ========== POWERUPS ==========
         powerup_spawn_timer -= 1
         if powerup_spawn_timer <= 0 and len(powerups) == 0:
             if math.isinf(level_distance):
@@ -308,9 +307,9 @@ def main_game(screen, start_level=1):
         score += 1
 
         # HUD
-        score_text = font.render(f"Score: {score}", True, BLACK)
-        level_text = font.render(f"Level: {level}", True, BLACK)
-        high_text = font.render(f"High: {highscore}", True, BLACK)
+        score_text = HUD_FONT.render(f"Score: {score}", True, BLACK)
+        level_text = HUD_FONT.render(f"Level: {level}", True, BLACK)
+        high_text = HUD_FONT.render(f"High: {highscore}", True, BLACK)
         hud_x = WIDTH - 260
         screen.blit(score_text, (hud_x, 20))
         screen.blit(level_text, (hud_x, 55))
@@ -318,7 +317,7 @@ def main_game(screen, start_level=1):
 
         if gato.can_shoot:
             remaining = max(0, gato.shoot_timer_powerup // FPS)
-            p_txt = font.render(f"Power-up: {remaining}s", True, (255, 100, 0))
+            p_txt = HUD_FONT.render(f"Power-up: {remaining}s", True, (255, 100, 0))
             screen.blit(p_txt, (20, 20))
 
         draw_progress_map(screen, score, level)
@@ -328,10 +327,15 @@ def main_game(screen, start_level=1):
 
         pygame.display.update()
 
+# Ponto de entrada principal
 if __name__ == "__main__":
+    # Inicializa pygame
+    pygame.init()
+    
     # Cria a janela em fullscreen
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
     pygame.display.set_caption("Super Cat Runner")
     
-    # Inicia o menu principal
+    # Importa e inicia o menu
+    from interfaces import menu
     menu(screen)
