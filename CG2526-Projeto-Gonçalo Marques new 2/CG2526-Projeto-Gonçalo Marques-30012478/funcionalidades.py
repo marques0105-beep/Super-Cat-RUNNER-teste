@@ -1,4 +1,3 @@
-# utils.py
 import pygame
 import json
 import os
@@ -6,9 +5,7 @@ import math
 from configuracoes import *
 
 def load_image(path, size=None, dirs=(ASSET_DIR, IMAGES_DIR), flip_x=False, flip_y=False, fallback_color=(150,150,150)):
-    """
-    Carrega uma imagem procurando nas pastas especificadas.
-    """
+    """Carrega uma imagem procurando nas pastas especificadas."""
     for d in dirs:
         try:
             full = os.path.join(d, path)
@@ -29,9 +26,7 @@ def load_image(path, size=None, dirs=(ASSET_DIR, IMAGES_DIR), flip_x=False, flip
     return surf
 
 def detect_ground_y_from_bg(surface):
-    """
-    Tenta detectar automaticamente a linha do chão no background.
-    """
+    """Tenta detectar automaticamente a linha do chão no background."""
     try:
         w, h = surface.get_size()
         sample_y = max(2, min(20, h // 20))
@@ -68,9 +63,7 @@ def detect_ground_y_from_bg(surface):
     return int(HEIGHT * 0.8)
 
 def create_ground_surface(bg_surface, ground_y, height=56):
-    """
-    Cria uma superfície que será usada como faixa de chão.
-    """
+    """Cria uma superfície que será usada como faixa de chão."""
     try:
         w, h = bg_surface.get_size()
         sample_w = max(10, w // 40)
@@ -101,9 +94,7 @@ def create_ground_surface(bg_surface, ground_y, height=56):
         return surf
 
 def load_highscore():
-    """
-    Lê o highscore do ficheiro JSON.
-    """
+    """Lê o highscore do ficheiro JSON."""
     try:
         with open(HIGHSCORE_FILE, "r") as f:
             return json.load(f).get("highscore", 0)
@@ -111,9 +102,7 @@ def load_highscore():
         return 0
 
 def save_highscore(value):
-    """
-    Persiste o highscore no ficheiro JSON.
-    """
+    """Persiste o highscore no ficheiro JSON."""
     try:
         with open(HIGHSCORE_FILE, "w") as f:
             json.dump({"highscore": value}, f)
@@ -121,9 +110,7 @@ def save_highscore(value):
         print("Erro ao salvar highscore:", e)
 
 def draw_button(surface, rect, text, base_color, hover_color, mouse_pos, selected=False, disabled=False):
-    """
-    Desenha um botão com sombra e efeitos visuais.
-    """
+    """Desenha um botão com sombra e efeitos visuais."""
     x, y, w, h = rect
     is_hover = pygame.Rect(rect).collidepoint(mouse_pos) or selected
     color = hover_color if is_hover and not disabled else base_color
@@ -147,9 +134,7 @@ def draw_button(surface, rect, text, base_color, hover_color, mouse_pos, selecte
     surface.blit(label, (x + (w - label.get_width()) // 2, y + (h - label.get_height()) // 2))
 
 def draw_progress_map(surface, score, level):
-    """
-    Desenha uma barra de progresso no HUD para o nível atual.
-    """
+    """Desenha uma barra de progresso no HUD para o nível atual."""
     from configuracoes import LEVEL_DISTANCES, WIDTH, HEIGHT, HUD_FONT, BLACK
     
     total = LEVEL_DISTANCES.get(level, 1000)
@@ -194,9 +179,7 @@ def draw_progress_map(surface, score, level):
     surface.blit(m_surf, (WIDTH // 2 - m_surf.get_width() // 2, bar_y + 12))
 
 def draw_boss_hp(surface, boss):
-    """
-    Desenha a barra de HP do boss no HUD.
-    """
+    """Desenha a barra de HP do boss no HUD."""
     from configuracoes import WIDTH, HEIGHT, HUD_FONT, BLACK
     
     if not boss:
